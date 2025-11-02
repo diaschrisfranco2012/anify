@@ -1,0 +1,32 @@
+name: anify
+description: A new Flutter project.
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  image_picker: ^1.2.0
+  tflite_flutter: ^0.12.1
+  flutter_tts: ^4.2.3
+  image: ^4.5.4
+  material_symbols_icons: ^4.2874.0
+  glassmorphism: ^3.0.0
+  google_mlkit_face_detection: ^0.11.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/model/animal_classifier.tflite
+    - assets/model/class_names_animals.json
