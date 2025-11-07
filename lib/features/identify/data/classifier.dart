@@ -14,12 +14,11 @@ class Classifier {
   late List<String> _labels;
 
   Future<void> load() async {
-    // Load TFLite model once
     _interpreter ??= await Interpreter.fromAsset(
       'assets/model/animal_classifier.tflite',
     );
-
-    // Load class labels (order must match model outputs)
+    // IMPORTANT: class_names_animals.json must now contain 4 entries in model order:
+    // ["cat","dog","wildlife","unrelated"]
     final labelsJson = await rootBundle
         .loadString(
           'assets/model/class_names_animals.json',
@@ -34,7 +33,7 @@ class Classifier {
       await load();
     }
 
-    // 1) Decode and resize image to model input
+    // Decode and resize
     final bytes = await file.readAsBytes();
     final img.Image? decoded = img.decodeImage(
       bytes,
@@ -48,16 +47,13 @@ class Classifier {
       height: inputSize,
     );
 
-    // 2) Build input tensor [1,224,224,3] with float32 normalized to [0,1]
+    // Build input tensor [1,224,224,3], normalized to [0,1]
     final input = List.generate(
       1,
       (_) => List.generate(
         inputSize,
         (y) => List.generate(inputSize, (x) {
-          final p = resized.getPixel(
-            x,
-            y,
-          ); // image 4.x Pixel
+          final p = resized.getPixel(x, y);
           return [
             p.r / 255.0,
             p.g / 255.0,
@@ -67,20 +63,20 @@ class Classifier {
       ),
     );
 
-    // 3) Prepare output buffer
+    // Prepare output buffer
     final outShape = _interpreter!
         .getOutputTensor(0)
-        .shape; // [1, numClasses]
+        .shape; // [1, numClasses=4]
     final numClasses = outShape.last;
     final output = List.filled(
       numClasses,
       0.0,
     ).reshape([1, numClasses]);
 
-    // 4) Inference
+    // Inference
     _interpreter!.run(input, output);
 
-    // 5) Top-1 selection
+    // Top-1 label
     final scores = (output[0] as List<double>);
     int best = 0;
     double bestScore = scores[0];
@@ -91,14 +87,14 @@ class Classifier {
       }
     }
 
-    // 6) Map to human label (expected labels: "cat", "dog", "wildlife")
     final raw =
         (best >= 0 && best < _labels.length)
         ? _labels[best]
         : 'unknown';
-    final display = _titleCase(raw);
+    final display = _titleCase(
+      raw,
+    ); // "Cat", "Dog", "Wildlife", "Unrelated" (expected)
 
-    // 7) Return prediction (UI/tts will speak only the label)
     return Prediction(
       fineLabel: display,
       coarseLabel: display,

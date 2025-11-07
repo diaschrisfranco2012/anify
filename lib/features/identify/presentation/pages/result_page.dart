@@ -34,8 +34,13 @@ class _ResultPageState extends State<ResultPage> {
   }
 
   Future<void> _speak() async {
+    final label = widget
+        .prediction
+        .coarseLabel; // "Cat", "Dog", "Wildlife", "Unrelated"
     final text =
-        "It's a ${widget.prediction.coarseLabel}.";
+        (label.toLowerCase() == 'unrelated')
+        ? "Please upload a proper picture."
+        : "It's a $label.";
     await _tts.stop();
     await _tts.speak(text);
   }
@@ -49,6 +54,10 @@ class _ResultPageState extends State<ResultPage> {
   @override
   Widget build(BuildContext context) {
     final p = widget.prediction;
+    final isUnrelated =
+        p.coarseLabel.toLowerCase() ==
+        'unrelated';
+
     return AnimatedAnifyBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -106,7 +115,9 @@ class _ResultPageState extends State<ResultPage> {
                           children: [
                             Chip(
                               label: Text(
-                                p.coarseLabel,
+                                isUnrelated
+                                    ? 'Unrelated'
+                                    : p.coarseLabel,
                               ),
                               backgroundColor:
                                   Colors.white
